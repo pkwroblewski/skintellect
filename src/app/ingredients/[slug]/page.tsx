@@ -102,11 +102,12 @@ const functionColors: Record<string, string> = {
 };
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const ingredient = ingredientsData[params.slug];
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const ingredient = ingredientsData[slug];
 
   if (!ingredient) {
     return {
@@ -136,8 +137,8 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function IngredientDetailPage({ params }: PageProps) {
-  const { slug } = params;
+export default async function IngredientDetailPage({ params }: PageProps) {
+  const { slug } = await params;
   const ingredient = ingredientsData[slug];
 
   if (!ingredient) {
