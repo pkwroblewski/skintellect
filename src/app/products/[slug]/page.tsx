@@ -125,11 +125,12 @@ const productsData: Record<string, {
 };
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const product = productsData[params.slug];
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = productsData[slug];
   
   if (!product) {
     return {
@@ -148,8 +149,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function ProductDetailPage({ params }: PageProps) {
-  const product = productsData[params.slug];
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  const product = productsData[slug];
 
   if (!product) {
     notFound();
