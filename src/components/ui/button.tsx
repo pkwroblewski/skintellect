@@ -16,7 +16,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center gap-2",
           "font-medium",
           "transition-colors duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-500 focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2",
           "disabled:pointer-events-none disabled:opacity-50",
           
           // Sizes (standardized heights)
@@ -29,8 +29,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           // Variants (reduced shadows)
           {
             primary: [
-              "bg-mint-600 text-white",
-              "hover:bg-mint-700",
+              "bg-rose-500 text-white",
+              "hover:bg-rose-600",
             ],
             secondary: [
               "bg-slate-100 text-slate-700",

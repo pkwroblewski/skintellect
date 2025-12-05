@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { Card, CardContent, Badge, Button } from "@/components/ui";
+import {
+  generateIngredientArticleSchema,
+  generateIngredientFAQSchema,
+  generateBreadcrumbSchema,
+} from "@/lib/seo";
 
 const ingredientsData: Record<string, {
   id: string;
@@ -96,19 +102,87 @@ const functionColors: Record<string, string> = {
 };
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }
 
-export default async function IngredientDetailPage({ params }: PageProps) {
-  const { slug } = await params;
+export function generateMetadata({ params }: PageProps): Metadata {
+  const ingredient = ingredientsData[params.slug];
+
+  if (!ingredient) {
+    return {
+      title: "Ingredient Not Found",
+    };
+  }
+
+  const safetyStatus = ingredient.isFungalAcneTrigger
+    ? "fungal acne trigger"
+    : "fungal acne safe";
+
+  return {
+    title: `${ingredient.name} - Skincare Ingredient Guide & Safety`,
+    description: `Learn about ${ingredient.name} in skincare: ${ingredient.description.slice(0, 120)}... Is it ${safetyStatus}? Comedogenic rating: ${ingredient.comedogenicRating}/5.`,
+    keywords: [
+      ingredient.name.toLowerCase(),
+      ingredient.inciName?.toLowerCase() || "",
+      "skincare ingredient",
+      ...ingredient.functions,
+      ingredient.isFungalAcneTrigger ? "fungal acne trigger" : "fungal acne safe",
+    ].filter(Boolean),
+    openGraph: {
+      title: `${ingredient.name} - Ingredient Profile | Skintelect`,
+      description: `${ingredient.description.slice(0, 150)}...`,
+      type: "article",
+    },
+  };
+}
+
+export default function IngredientDetailPage({ params }: PageProps) {
+  const { slug } = params;
   const ingredient = ingredientsData[slug];
 
   if (!ingredient) {
     notFound();
   }
 
+  // Generate structured data
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://skintelect.com";
+  
+  const articleSchema = generateIngredientArticleSchema({
+    name: ingredient.name,
+    description: ingredient.description,
+    slug: ingredient.slug,
+  });
+
+  const faqSchema = generateIngredientFAQSchema({
+    name: ingredient.name,
+    isFungalAcneTrigger: ingredient.isFungalAcneTrigger,
+    isAllergen: ingredient.isAllergen ?? false,
+    comedogenicRating: ingredient.comedogenicRating,
+    functions: ingredient.functions,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: siteUrl },
+    { name: "Ingredients", url: `${siteUrl}/ingredients` },
+    { name: ingredient.name },
+  ]);
+
   return (
     <div className="min-h-screen bg-white">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       {/* Page Header */}
       <section className="border-b border-slate-100 bg-gradient-subtle py-8">
         <Container size="md">
@@ -231,7 +305,7 @@ export default async function IngredientDetailPage({ params }: PageProps) {
                     <h2 className="text-sm font-semibold text-slate-900 mb-3">Best For</h2>
                     <div className="flex flex-wrap gap-1.5">
                       {ingredient.goodFor.map((type) => (
-                        <Badge key={type} variant="mint" size="sm">{type}</Badge>
+                        <Badge key={type} variant="rose" size="sm">{type}</Badge>
                       ))}
                     </div>
                   </CardContent>

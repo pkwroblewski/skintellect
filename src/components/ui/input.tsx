@@ -15,7 +15,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           "text-sm text-slate-900 placeholder:text-slate-400",
           "transition-all duration-200",
           "hover:border-slate-300",
-          "focus:border-mint-500 focus:outline-none focus:ring-4 focus:ring-mint-500/10",
+          "focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50",
           className
         )}
@@ -40,7 +40,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           "text-sm text-slate-900 placeholder:text-slate-400",
           "transition-all duration-200 resize-none",
           "hover:border-slate-300",
-          "focus:border-mint-500 focus:outline-none focus:ring-4 focus:ring-mint-500/10",
+          "focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50",
           className
         )}

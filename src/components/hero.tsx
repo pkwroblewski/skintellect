@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type SearchTab = "analyze" | "search";
 
@@ -13,6 +14,7 @@ const featureTags = [
 ];
 
 export function Hero() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<SearchTab>("analyze");
   const [ingredientInput, setIngredientInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -20,22 +22,25 @@ export function Hero() {
   const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
     if (ingredientInput.trim()) {
-      console.log("Analyzing ingredients:", ingredientInput);
-      alert(`Analyzing ingredients...`);
+      // Navigate to analyze page with ingredients as query param
+      const params = new URLSearchParams({ ingredients: ingredientInput });
+      router.push(`/analyze?${params.toString()}`);
     }
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
-      console.log("Searching for:", searchInput);
-      alert(`Searching for "${searchInput}"...`);
+      // Navigate to products page with search query
+      const params = new URLSearchParams({ q: searchInput });
+      router.push(`/products?${params.toString()}`);
     }
   };
 
   const handleQuickSearch = (term: string) => {
-    setActiveTab("search");
-    setSearchInput(term);
+    // Navigate directly to products search
+    const params = new URLSearchParams({ q: term });
+    router.push(`/products?${params.toString()}`);
   };
 
   return (

@@ -1,0 +1,331 @@
+// ========================================
+// SKINTELLECT DATABASE SCHEMA
+// ========================================
+// This schema defines the core data models for the Skintellect application.
+// Use `npx prisma migrate dev` to create migrations.
+// Use `npx prisma generate` to generate the Prisma client.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// INGREDIENT MODEL
+// ========================================
+// Central repository of skincare ingredients with safety and function data.
+
+model Ingredient {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  name                String
+  inciName            String?  // INCI (International Nomenclature of Cosmetic Ingredients)
+  aliases             String[] // Alternative names for searching
+  description         String?  @db.Text
+  
+  // Functions/categories (using enum for type safety)
+  functions           IngredientFunction[]
+  
+  // Safety ratings
+  comedogenicRating   Int?     @default(0) // 0-5 scale
+  irritationLevel     Int?     @default(0) // 0-5 scale
+  isFungalAcneTrigger Boolean  @default(false)
+  isAllergen          Boolean  @default(false)
+  isReefUnsafe        Boolean  @default(false)
+  
+  // Educational content
+  benefits            String[] // Array of benefit descriptions
+  concerns            String[] // Array of concern descriptions
+  goodFor             String[] // Skin types this is good for
+  
+  // SEO and content
+  metaTitle           String?
+  metaDescription     String?
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  productIngredients  ProductIngredient[]
+  
+  @@index([slug])
+  @@index([isFungalAcneTrigger])
+  @@index([isAllergen])
+  @@index([comedogenicRating])
+}
+
+enum IngredientFunction {
+  moisturizing
+  antioxidant
+  exfoliating
+  soothing
+  brightening
+  acne_fighting
+  anti_aging
+  cleansing
+  preservative
+  fragrance
+  emulsifier
+  solvent
+  surfactant
+  humectant
+  occlusive
+  emollient
+  other
+}
+
+// ========================================
+// BRAND MODEL
+// ========================================
+// Skincare brands with company info.
+
+model Brand {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  website     String?
+  country     String?   // Country of origin
+  description String?   @db.Text
+  logoUrl     String?
+  
+  // Trust indicators
+  isVerified  Boolean   @default(false)
+  isCrueltyFree Boolean @default(false)
+  isVegan     Boolean   @default(false)
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  products    Product[]
+  
+  @@index([slug])
+  @@index([name])
+}
+
+// ========================================
+// PRODUCT MODEL
+// ========================================
+// Skincare products with ingredient lists and analysis.
+
+model Product {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  
+  // Brand relation
+  brandId         String
+  brand           Brand    @relation(fields: [brandId], references: [id])
+  
+  // Categorization
+  category        ProductCategory
+  subCategory     String?
+  
+  // Product info
+  description     String?  @db.Text
+  imageUrl        String?
+  size            String?  // e.g., "50ml", "1.7 oz"
+  
+  // Status
+  isDiscontinued  Boolean  @default(false)
+  isVerified      Boolean  @default(false)
+  
+  // Aggregated ratings (from reviews/external sources)
+  averageRating   Float?
+  reviewCount     Int      @default(0)
+  
+  // Computed safety scores (updated via background job)
+  safetyScore     String?  // "Excellent", "Good", "Fair", "Poor"
+  isFungalAcneSafe Boolean @default(true)
+  
+  // Raw ingredients text (as found on product)
+  ingredientsText String?  @db.Text
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  ingredients     ProductIngredient[]
+  affiliateOffers AffiliateOffer[]
+  
+  @@index([slug])
+  @@index([brandId])
+  @@index([category])
+  @@index([isFungalAcneSafe])
+}
+
+enum ProductCategory {
+  cleanser
+  moisturizer
+  serum
+  toner
+  exfoliant
+  sunscreen
+  mask
+  eye_care
+  lip_care
+  treatment
+  mist
+  oil
+  other
+}
+
+// ========================================
+// PRODUCT-INGREDIENT JOIN TABLE
+// ========================================
+// Links products to their ingredients with position and optional concentration.
+
+model ProductIngredient {
+  id                    String     @id @default(cuid())
+  
+  productId             String
+  product               Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  ingredientId          String
+  ingredient            Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  
+  // Position in ingredient list (1 = first/highest concentration)
+  position              Int
+  
+  // Optional concentration estimate
+  concentrationEstimate String?    // e.g., "1-5%", "<1%", "active"
+  
+  // Timestamps
+  createdAt             DateTime   @default(now())
+  
+  @@unique([productId, ingredientId])
+  @@index([productId])
+  @@index([ingredientId])
+  @@index([position])
+}
+
+// ========================================
+// AFFILIATE OFFER MODEL
+// ========================================
+// Affiliate links for products with pricing and availability.
+
+model AffiliateOffer {
+  id               String   @id @default(cuid())
+  
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Retailer info
+  retailerName     String   // e.g., "Amazon", "Sephora", "Ulta"
+  retailerSlug     String   // e.g., "amazon", "sephora"
+  countryCode      String   @default("US") // ISO 3166-1 alpha-2
+  
+  // Link and tracking
+  url              String   @db.Text
+  affiliateNetwork String?  // e.g., "Amazon Associates", "ShareASale"
+  deepLinkParams   String?  // Additional tracking params
+  
+  // Pricing
+  currency         String   @default("USD")
+  price            Float?
+  originalPrice    Float?   // For showing discounts
+  
+  // Availability
+  availability     OfferAvailability @default(unknown)
+  lastChecked      DateTime?
+  
+  // Analytics (privacy-aware aggregates only)
+  clickCount       Int      @default(0)
+  conversionCount  Int      @default(0)
+  
+  // Priority for display (lower = higher priority)
+  displayPriority  Int      @default(100)
+  
+  // Status
+  isActive         Boolean  @default(true)
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([productId])
+  @@index([retailerSlug])
+  @@index([countryCode])
+  @@index([isActive])
+  @@index([displayPriority])
+}
+
+enum OfferAvailability {
+  in_stock
+  low_stock
+  out_of_stock
+  preorder
+  unknown
+}
+
+// ========================================
+// FUTURE MODELS (commented out for now)
+// ========================================
+// Uncomment and migrate when user features are ready.
+
+// model User {
+//   id            String    @id @default(cuid())
+//   email         String    @unique
+//   name          String?
+//   image         String?
+//   emailVerified DateTime?
+//   createdAt     DateTime  @default(now())
+//   updatedAt     DateTime  @updatedAt
+//   
+//   skinProfile   SkinProfile?
+//   routines      Routine[]
+//   savedProducts SavedProduct[]
+// }
+
+// model SkinProfile {
+//   id              String   @id @default(cuid())
+//   userId          String   @unique
+//   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   
+//   skinType        String?  // "oily", "dry", "combination", "normal", "sensitive"
+//   concerns        String[] // ["acne", "aging", "hyperpigmentation", etc.]
+//   allergies       String[] // Known ingredient allergies
+//   hasFungalAcne   Boolean  @default(false)
+//   
+//   createdAt       DateTime @default(now())
+//   updatedAt       DateTime @updatedAt
+// }
+
+// model Routine {
+//   id          String   @id @default(cuid())
+//   userId      String
+//   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   
+//   name        String
+//   description String?
+//   timeOfDay   String   // "morning", "evening", "both"
+//   isPublic    Boolean  @default(false)
+//   
+//   steps       RoutineStep[]
+//   
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+// }
+
+// model RoutineStep {
+//   id          String  @id @default(cuid())
+//   routineId   String
+//   routine     Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+//   
+//   productId   String?
+//   stepNumber  Int
+//   notes       String?
+//   waitTime    Int?    // Seconds to wait before next step
+// }
+

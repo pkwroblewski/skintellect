@@ -2,10 +2,19 @@ import { Hero } from "@/components/hero";
 import { ProductGrid } from "@/components/product-grid";
 import { FeaturesSection } from "@/components/features-section";
 import { Footer } from "@/components/layout/footer";
+import { generateWebsiteSchema } from "@/lib/seo";
 
 export default function Home() {
+  const websiteSchema = generateWebsiteSchema();
+
   return (
     <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+
       {/* Skip Link for Accessibility */}
       <a
         href="#main-content"

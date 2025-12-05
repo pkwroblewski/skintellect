@@ -64,12 +64,34 @@ export interface AnalysisResult {
 
 // Component prop types
 export interface BadgeVariant {
-  variant: "default" | "success" | "warning" | "danger" | "info" | "outline";
-  size?: "sm" | "md" | "lg";
+  variant: "default" | "success" | "warning" | "danger" | "info" | "outline" | "rose";
+  size?: "sm" | "md";
 }
 
 export interface ButtonVariant {
   variant: "primary" | "secondary" | "ghost" | "outline" | "danger";
   size?: "sm" | "md" | "lg";
 }
+
+// ========================================
+// DATA SOURCE DOCUMENTATION
+// ========================================
+// TODO: The following data sources need to be consolidated into a single
+// Prisma database schema when the backend is implemented:
+//
+// 1. src/app/ingredients/page.tsx - `ingredients` array
+//    Contains: id, name, slug, functions, description, isFungalAcneTrigger, isAllergen
+//
+// 2. src/app/ingredients/[slug]/page.tsx - `ingredientsData` object
+//    Contains: id, name, slug, inciName, functions, description, benefits, concerns,
+//              isFungalAcneTrigger, isAllergen, comedogenicRating, goodFor
+//
+// 3. src/app/analyze/page.tsx - `knownIngredients` map
+//    Contains: name, functions, isFungalAcneTrigger, isAllergen, isReefUnsafe,
+//              comedogenicRating, irritationLevel
+//
+// All three should map to the Ingredient interface defined above.
+// The database schema should include all fields from the most complete source (ingredientsData)
+// plus any additional fields from the other sources (isReefUnsafe, irritationLevel).
+// ========================================
 

@@ -1,6 +1,27 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { Card, CardContent, Badge, Input } from "@/components/ui";
+
+export const metadata: Metadata = {
+  title: "Ingredients Dictionary - Learn About Skincare Ingredients",
+  description:
+    "Explore our comprehensive database of skincare ingredients. Learn about their functions, safety ratings, and whether they're right for your skin type.",
+  keywords: [
+    "skincare ingredients",
+    "ingredient dictionary",
+    "cosmetic ingredients",
+    "fungal acne triggers",
+    "comedogenic ingredients",
+    "skincare education",
+  ],
+  openGraph: {
+    title: "Ingredients Dictionary | Skintelect",
+    description:
+      "Explore our comprehensive database of skincare ingredients. Learn about their functions and safety ratings.",
+    type: "website",
+  },
+};
 
 // Sample ingredients
 const ingredients = [
@@ -68,7 +89,7 @@ export default function IngredientsPage() {
                 key={tag}
                 className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                   index === 0 
-                    ? "bg-mint-600 text-white" 
+                    ? "bg-rose-500 text-white" 
                     : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                 }`}
               >
