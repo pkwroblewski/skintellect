@@ -65,9 +65,10 @@ export function Header() {
           {/* Mobile menu button */}
           <button
             type="button"
-            className="md:hidden p-2 text-slate-600 hover:text-slate-900"
-            aria-label="Open menu"
+            className="md:hidden p-2 text-slate-600 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 rounded-lg"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <svg
@@ -76,6 +77,7 @@ export function Header() {
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
+              aria-hidden="true"
             >
               {mobileMenuOpen ? (
                 <path
@@ -97,6 +99,7 @@ export function Header() {
 
       {/* Mobile Navigation */}
       <div
+        id="mobile-menu"
         className={`md:hidden border-t border-slate-200 bg-white transition-all duration-300 ${
           mobileMenuOpen ? "max-h-60 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
         }`}

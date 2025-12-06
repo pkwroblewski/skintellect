@@ -6,7 +6,7 @@
  */
 
 import { db } from "@/lib/db";
-import type { Product, ProductCategory, Brand, Prisma } from "@prisma/client";
+import type { Product, ProductCategory, Brand, Prisma, BenefitCategory } from "@prisma/client";
 
 // ========================================
 // TYPES
@@ -28,6 +28,45 @@ export type ProductWithIngredients = Product & {
       isFungalAcneTrigger: boolean;
       isAllergen: boolean;
     };
+  }>;
+};
+
+// Full product details for the product detail page
+export type ProductWithFullDetails = Product & {
+  brand: Pick<Brand, "id" | "slug" | "name" | "country" | "isVegan" | "isCrueltyFree">;
+  ingredients: Array<{
+    position: number;
+    isHighlighted: boolean;
+    customNote: string | null;
+    ingredient: {
+      id: string;
+      slug: string;
+      name: string;
+      inciName: string | null;
+      functions: string[];
+      isActive: boolean;
+      comedogenicRating: number | null;
+      irritationLevel: number | null;
+      isFungalAcneTrigger: boolean;
+      isAllergen: boolean;
+      description: string | null;
+    };
+  }>;
+  benefits: Array<{
+    benefit: BenefitCategory;
+    ingredientCount: number;
+    description: string | null;
+  }>;
+  concerns: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    severity: string;
+    ingredient: {
+      id: string;
+      slug: string;
+      name: string;
+    } | null;
   }>;
 };
 
@@ -63,7 +102,7 @@ export interface ProductSearchParams {
 // ========================================
 
 /**
- * Get a single product by its URL slug with full details.
+ * Get a single product by its URL slug with basic details.
  */
 export async function getProductBySlug(
   slug: string
@@ -85,6 +124,73 @@ export async function getProductBySlug(
               functions: true,
               isFungalAcneTrigger: true,
               isAllergen: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Get a single product by its URL slug with FULL details for the product page.
+ * Includes ingredients with full data, benefits, and concerns.
+ */
+export async function getProductWithFullDetails(
+  slug: string
+): Promise<ProductWithFullDetails | null> {
+  return db.product.findUnique({
+    where: { slug },
+    include: {
+      brand: {
+        select: { 
+          id: true, 
+          slug: true, 
+          name: true,
+          country: true,
+          isVegan: true,
+          isCrueltyFree: true,
+        },
+      },
+      ingredients: {
+        orderBy: { position: "asc" },
+        include: {
+          ingredient: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              inciName: true,
+              functions: true,
+              isActive: true,
+              comedogenicRating: true,
+              irritationLevel: true,
+              isFungalAcneTrigger: true,
+              isAllergen: true,
+              description: true,
+            },
+          },
+        },
+      },
+      benefits: {
+        orderBy: { ingredientCount: "desc" },
+        select: {
+          benefit: true,
+          ingredientCount: true,
+          description: true,
+        },
+      },
+      concerns: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          severity: true,
+          ingredient: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
             },
           },
         },
@@ -369,5 +475,40 @@ export async function getRelatedProducts(
     orderBy: { averageRating: "desc" },
     take: limit,
   });
+}
+
+// Type for related products with brand name (for component)
+export type RelatedProductDisplay = {
+  id: string;
+  slug: string;
+  name: string;
+  brand: { name: string };
+  category: string;
+  imageUrl: string | null;
+  safetyScore: number;
+  isFungalAcneSafe: boolean;
+  averageRating: number | null;
+};
+
+/**
+ * Get related products with display-ready format.
+ */
+export async function getRelatedProductsForDisplay(
+  productId: string,
+  limit = 4
+): Promise<RelatedProductDisplay[]> {
+  const summaries = await getRelatedProducts(productId, limit);
+  
+  return summaries.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    brand: { name: p.brand.name },
+    category: p.category,
+    imageUrl: p.imageUrl ?? null,
+    safetyScore: typeof p.safetyScore === "number" ? p.safetyScore : 10,
+    isFungalAcneSafe: p.isFungalAcneSafe,
+    averageRating: p.averageRating ?? null,
+  }));
 }
 

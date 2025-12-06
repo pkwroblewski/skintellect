@@ -26,9 +26,11 @@ model Ingredient {
   inciName            String?  // INCI (International Nomenclature of Cosmetic Ingredients)
   aliases             String[] // Alternative names for searching
   description         String?  @db.Text
+  detailedExplanation String?  @db.Text // Longer educational content
   
   // Functions/categories (using enum for type safety)
   functions           IngredientFunction[]
+  isActive            Boolean  @default(false) // Is this an "active" ingredient?
   
   // Safety ratings
   comedogenicRating   Int?     @default(0) // 0-5 scale
@@ -42,6 +44,9 @@ model Ingredient {
   concerns            String[] // Array of concern descriptions
   goodFor             String[] // Skin types this is good for
   
+  // EWG safety score (1-10, lower is safer)
+  ewgRating           Int?
+  
   // SEO and content
   metaTitle           String?
   metaDescription     String?
@@ -52,11 +57,13 @@ model Ingredient {
   
   // Relations
   productIngredients  ProductIngredient[]
+  productConcerns     ProductConcern[]
   
   @@index([slug])
   @@index([isFungalAcneTrigger])
   @@index([isAllergen])
   @@index([comedogenicRating])
+  @@index([isActive])
 }
 
 enum IngredientFunction {
@@ -76,6 +83,11 @@ enum IngredientFunction {
   humectant
   occlusive
   emollient
+  ph_adjuster
+  thickener
+  chelating
+  colorant
+  uv_filter
   other
 }
 
@@ -130,7 +142,10 @@ model Product {
   // Product info
   description     String?  @db.Text
   imageUrl        String?
+  images          String[] // Additional product images
   size            String?  // e.g., "50ml", "1.7 oz"
+  texture         String?  // e.g., "gel", "cream", "lotion"
+  phLevel         Float?   // pH level if known
   
   // Status
   isDiscontinued  Boolean  @default(false)
@@ -140,9 +155,25 @@ model Product {
   averageRating   Float?
   reviewCount     Int      @default(0)
   
-  // Computed safety scores (updated via background job)
-  safetyScore     String?  // "Excellent", "Good", "Fair", "Poor"
+  // Numeric safety score (0-10 scale)
+  safetyScore     Float    @default(10)
+  
+  // Safety flags
   isFungalAcneSafe Boolean @default(true)
+  isFragranceFree  Boolean @default(true)
+  isAlcoholFree    Boolean @default(true)
+  isParabenFree    Boolean @default(true)
+  isSulfateFree    Boolean @default(true)
+  isSiliconeFree   Boolean @default(true)
+  isOilFree        Boolean @default(true)
+  isVegan          Boolean @default(false)
+  isCrueltyFree    Boolean @default(false)
+  isReefSafe       Boolean @default(true)
+  
+  // Computed counts (denormalized for performance)
+  ingredientCount  Int     @default(0)
+  activeCount      Int     @default(0)
+  triggerCount     Int     @default(0)
   
   // Raw ingredients text (as found on product)
   ingredientsText String?  @db.Text
@@ -158,11 +189,17 @@ model Product {
   // Relations
   ingredients     ProductIngredient[]
   affiliateOffers AffiliateOffer[]
+  benefits        ProductBenefit[]
+  concerns        ProductConcern[]
+  relatedTo       RelatedProduct[]   @relation("ProductRelatedTo")
+  relatedFrom     RelatedProduct[]   @relation("ProductRelatedFrom")
   
   @@index([slug])
   @@index([brandId])
   @@index([category])
   @@index([isFungalAcneSafe])
+  @@index([safetyScore])
+  @@index([averageRating])
 }
 
 enum ProductCategory {
@@ -201,6 +238,12 @@ model ProductIngredient {
   // Optional concentration estimate
   concentrationEstimate String?    // e.g., "1-5%", "<1%", "active"
   
+  // Highlight this ingredient as a "star" ingredient
+  isHighlighted         Boolean    @default(false)
+  
+  // Custom note for this ingredient in this specific product
+  customNote            String?
+  
   // Timestamps
   createdAt             DateTime   @default(now())
   
@@ -208,6 +251,95 @@ model ProductIngredient {
   @@index([productId])
   @@index([ingredientId])
   @@index([position])
+}
+
+// ========================================
+// PRODUCT BENEFIT MODEL
+// ========================================
+// Tracks what skin benefits a product provides.
+
+model ProductBenefit {
+  id              String          @id @default(cuid())
+  
+  productId       String
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Benefit category
+  benefit         BenefitCategory
+  
+  // How many ingredients contribute to this benefit
+  ingredientCount Int             @default(1)
+  
+  // Brief description
+  description     String?
+  
+  @@unique([productId, benefit])
+  @@index([productId])
+}
+
+enum BenefitCategory {
+  hydrating
+  anti_aging
+  brightening
+  acne_fighting
+  soothing
+  pore_minimizing
+  barrier_repair
+  exfoliating
+  dark_spot_fading
+  redness_reducing
+  firming
+  mattifying
+  uv_protection
+  nourishing
+  other
+}
+
+// ========================================
+// PRODUCT CONCERN MODEL
+// ========================================
+// Tracks potential concerns/warnings for a product.
+
+model ProductConcern {
+  id           String      @id @default(cuid())
+  
+  productId    String
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Concern details
+  title        String      // e.g., "May increase sun sensitivity"
+  description  String?
+  severity     String      @default("low") // "low", "medium", "high"
+  
+  // Link to ingredient causing concern (optional)
+  ingredientId String?
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
+  
+  @@index([productId])
+}
+
+// ========================================
+// RELATED PRODUCTS MODEL
+// ========================================
+// Links products to similar/alternative products.
+
+model RelatedProduct {
+  id               String  @id @default(cuid())
+  
+  productId        String
+  product          Product @relation("ProductRelatedTo", fields: [productId], references: [id], onDelete: Cascade)
+  
+  relatedProductId String
+  relatedProduct   Product @relation("ProductRelatedFrom", fields: [relatedProductId], references: [id], onDelete: Cascade)
+  
+  // Type of relationship
+  relationType     String  @default("similar") // "similar", "alternative", "complement", "upgrade"
+  
+  // Display order
+  displayOrder     Int     @default(0)
+  
+  @@unique([productId, relatedProductId])
+  @@index([productId])
 }
 
 // ========================================

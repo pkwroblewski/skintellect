@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
+import { Analytics } from "@/components/analytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -81,6 +82,8 @@ export default function RootLayout({
         <main>
           {children}
         </main>
+        {/* Analytics - loads in production only */}
+        <Analytics />
       </body>
     </html>
   );

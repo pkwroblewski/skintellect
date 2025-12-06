@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 type SearchTab = "analyze" | "search";
@@ -11,6 +11,11 @@ const featureTags = [
   { label: "Fungal Acne Safe", color: "green" },
   { label: "No Alcohol", color: "blue" },
   { label: "Vegan", color: "purple" },
+] as const;
+
+const tabs: { id: SearchTab; label: string }[] = [
+  { id: "analyze", label: "Analyze Ingredients" },
+  { id: "search", label: "Search Products" },
 ];
 
 export function Hero() {
@@ -18,6 +23,40 @@ export function Hero() {
   const [activeTab, setActiveTab] = useState<SearchTab>("analyze");
   const [ingredientInput, setIngredientInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
+
+  // Handle keyboard navigation for tabs (Arrow Left/Right, Home, End)
+  const handleTabKeyDown = useCallback((e: KeyboardEvent<HTMLButtonElement>, currentTab: SearchTab) => {
+    const currentIndex = tabs.findIndex(t => t.id === currentTab);
+    let newIndex = currentIndex;
+
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        newIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        newIndex = currentIndex === tabs.length - 1 ? 0 : currentIndex + 1;
+        break;
+      case "Home":
+        e.preventDefault();
+        newIndex = 0;
+        break;
+      case "End":
+        e.preventDefault();
+        newIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    setActiveTab(tabs[newIndex].id);
+    // Focus the new tab after state update
+    setTimeout(() => {
+      const tabElement = document.getElementById(`tab-${tabs[newIndex].id}`);
+      tabElement?.focus();
+    }, 0);
+  }, []);
 
   const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,12 +140,14 @@ export function Hero() {
                   id="tab-analyze"
                   aria-selected={activeTab === "analyze"}
                   aria-controls="panel-analyze"
+                  tabIndex={activeTab === "analyze" ? 0 : -1}
                   className={`search-tab flex-1 flex items-center justify-center gap-2 py-3.5 ${
                     activeTab === "analyze"
                       ? "text-slate-900"
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                   onClick={() => setActiveTab("analyze")}
+                  onKeyDown={(e) => handleTabKeyDown(e, "analyze")}
                 >
                   <svg
                     className="w-[18px] h-[18px]"
@@ -114,6 +155,7 @@ export function Hero() {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -129,12 +171,14 @@ export function Hero() {
                   id="tab-search"
                   aria-selected={activeTab === "search"}
                   aria-controls="panel-search"
+                  tabIndex={activeTab === "search" ? 0 : -1}
                   className={`search-tab flex-1 flex items-center justify-center gap-2 py-3.5 ${
                     activeTab === "search"
                       ? "text-slate-900"
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                   onClick={() => setActiveTab("search")}
+                  onKeyDown={(e) => handleTabKeyDown(e, "search")}
                 >
                   <svg
                     className="w-[18px] h-[18px]"
@@ -142,6 +186,7 @@ export function Hero() {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"

@@ -51,14 +51,24 @@ export interface AnalyzedIngredient {
 export interface AnalysisResult {
   ingredients: AnalyzedIngredient[];
   summary: {
+    /** Total number of ingredients parsed */
     total: number;
+    /** Number of ingredients found in the database */
     recognized: number;
+    /** Number of ingredients not found in the database */
     unrecognized: number;
+    /** Whether no fungal acne triggers were found */
     isFungalAcneSafe: boolean;
+    /** Names of ingredients that trigger fungal acne */
     fungalAcneTriggers: string[];
+    /** Names of ingredients with high irritation levels */
     potentialIrritants: string[];
+    /** Names of ingredients flagged as potential allergens */
     potentialAllergens: string[];
+    /** Names of ingredients with high comedogenic ratings */
     comedogenicIngredients: string[];
+    /** Names of ingredients that are harmful to marine life */
+    reefUnsafe?: string[];
   };
 }
 

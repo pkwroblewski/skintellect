@@ -96,20 +96,26 @@ function FilterCheckbox({
   label,
   checked,
   onChange,
+  id,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  id: string;
 }) {
   return (
     <button
       type="button"
+      id={id}
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={`Filter by ${label}`}
       onClick={() => onChange(!checked)}
-      className="flex items-center gap-3 group cursor-pointer w-full text-left"
+      className="flex items-center gap-3 group cursor-pointer w-full text-left focus-visible:outline-none"
     >
       <div className="relative flex items-center">
         <div
-          className={`h-4 w-4 rounded border transition-all flex items-center justify-center ${
+          className={`h-4 w-4 rounded border transition-all flex items-center justify-center group-focus-visible:ring-2 group-focus-visible:ring-rose-500 group-focus-visible:ring-offset-2 ${
             checked
               ? "bg-slate-900 border-slate-900"
               : "bg-white border-slate-300"
@@ -122,6 +128,7 @@ function FilterCheckbox({
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={3}
+              aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
@@ -140,24 +147,31 @@ function FilterToggle({
   label,
   checked,
   onChange,
+  id,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  id: string;
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-600">{label}</span>
+      <label htmlFor={id} className="text-sm text-slate-600 cursor-pointer">
+        {label}
+      </label>
       <button
         type="button"
+        id={id}
         role="switch"
         aria-checked={checked}
+        aria-label={`${label} filter`}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${
+        className={`relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 ${
           checked ? "bg-rose-500" : "bg-slate-200"
         }`}
       >
         <span
+          aria-hidden="true"
           className={`inline-block h-4 w-4 transform rounded-full bg-white border border-gray-300 shadow-sm transition-transform ${
             checked ? "translate-x-4" : "translate-x-0.5"
           }`}
@@ -224,6 +238,7 @@ export function ProductGrid() {
                   Product Type
                 </legend>
                 <FilterCheckbox
+                  id="filter-cleansers"
                   label="Cleansers"
                   checked={productTypes.cleansers}
                   onChange={(checked) =>
@@ -231,6 +246,7 @@ export function ProductGrid() {
                   }
                 />
                 <FilterCheckbox
+                  id="filter-moisturizers"
                   label="Moisturizers"
                   checked={productTypes.moisturizers}
                   onChange={(checked) =>
@@ -238,6 +254,7 @@ export function ProductGrid() {
                   }
                 />
                 <FilterCheckbox
+                  id="filter-serums"
                   label="Serums"
                   checked={productTypes.serums}
                   onChange={(checked) =>
@@ -252,6 +269,7 @@ export function ProductGrid() {
                   Must Be Free Of
                 </legend>
                 <FilterToggle
+                  id="filter-parabens"
                   label="Parabens"
                   checked={freeOf.parabens}
                   onChange={(checked) =>
@@ -259,6 +277,7 @@ export function ProductGrid() {
                   }
                 />
                 <FilterToggle
+                  id="filter-sulfates"
                   label="Sulfates"
                   checked={freeOf.sulfates}
                   onChange={(checked) =>
@@ -266,6 +285,7 @@ export function ProductGrid() {
                   }
                 />
                 <FilterToggle
+                  id="filter-alcohol"
                   label="Alcohol"
                   checked={freeOf.alcohol}
                   onChange={(checked) =>

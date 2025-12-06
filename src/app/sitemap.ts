@@ -2,6 +2,21 @@ import { MetadataRoute } from "next";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://skintelect.com";
 
+/**
+ * Sitemap generation for search engine indexing.
+ * 
+ * Currently uses static arrays for ingredient and product slugs.
+ * 
+ * To switch to database-backed slugs:
+ * 1. Import { getAllIngredientSlugs } from "@/lib/repositories/ingredients"
+ * 2. Import { getAllProductSlugs } from "@/lib/repositories/products"
+ * 3. Make this function async: export default async function sitemap()
+ * 4. Replace static arrays with: const ingredientSlugs = await getAllIngredientSlugs()
+ * 
+ * Note: Consider caching or ISR strategies if the database grows large,
+ * as sitemap generation happens on every request in production.
+ */
+
 // Static ingredient slugs (will be replaced with database query)
 const ingredientSlugs = [
   "niacinamide",

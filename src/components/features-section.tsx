@@ -9,6 +9,7 @@ const features = [
         viewBox="0 0 24 24"
         stroke="currentColor"
         strokeWidth={2}
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -28,6 +29,7 @@ const features = [
         viewBox="0 0 24 24"
         stroke="currentColor"
         strokeWidth={2}
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -107,9 +109,9 @@ export function FeaturesSection() {
 
             {/* Demo Card */}
             <div className="relative rounded-xl border border-slate-700 bg-slate-950 p-6 shadow-2xl transition-transform duration-300 group-hover:-translate-y-1">
-              {/* Window Controls */}
-              <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-2" aria-hidden="true">
+              {/* Window Controls - decorative */}
+              <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-4" aria-hidden="true">
+                <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-red-500" />
                   <div className="h-3 w-3 rounded-full bg-yellow-500" />
                   <div className="h-3 w-3 rounded-full bg-green-500" />

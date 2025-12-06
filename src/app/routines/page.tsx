@@ -4,9 +4,23 @@ import { Container } from "@/components/layout/container";
 import { Card, CardContent } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Skincare Routines | Skintelect",
+  title: "Skincare Routines - Build Your Perfect Routine | Skintelect",
   description:
-    "Build and share skincare routines tailored to your skin type. Get personalized recommendations based on ingredient analysis.",
+    "Build and share skincare routines tailored to your skin type. Get personalized recommendations based on ingredient analysis for fungal acne safe, anti-aging, and hydrating routines.",
+  keywords: [
+    "skincare routine",
+    "skincare routine builder",
+    "fungal acne safe routine",
+    "morning skincare routine",
+    "evening skincare routine",
+    "personalized skincare",
+  ],
+  openGraph: {
+    title: "Skincare Routines | Skintelect",
+    description:
+      "Build and share skincare routines tailored to your skin type with ingredient safety checks.",
+    type: "website",
+  },
 };
 
 const sampleRoutines = [
